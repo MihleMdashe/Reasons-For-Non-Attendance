@@ -66,7 +66,7 @@
     margin-bottom: 6px;
   }
   .axis-spacer {
-    flex: 0 0 38%;
+    flex: 0 0 36%;
   }
   .axis-scale {
     flex: 1;
@@ -93,7 +93,7 @@
   }
 
   .bar-label {
-    flex: 0 0 38%;
+    flex: 0 0 36%;
     padding-right: 14px;
     font-size: 16px;
     line-height: 1.35;
@@ -105,12 +105,14 @@
     flex: 1;
     min-width: 0;
     position: relative;
+    overflow: visible;
   }
 
   .bar-track {
     position: relative;
     height: 22px;
     margin-bottom: 5px;
+    overflow: visible;
   }
 
   .bar {
@@ -129,7 +131,7 @@
     font-weight: 600;
     color: #333;
     white-space: nowrap;
-    margin-left: 8px;
+    margin-left: 6px;
   }
   .bar-value-zero {
     color: #aaa;
@@ -256,8 +258,8 @@ var data = [
   {reason:"Got married",a:0,b:0}
 ];
 
-var maxVal = 25;
-var ticks = [0,5,10,15,20,25];
+var maxVal = 30;
+var ticks = [0,5,10,15,20,25,30];
 
 var chart = document.getElementById('chart');
 
@@ -304,7 +306,7 @@ for (var i = 0; i < data.length; i++) {
     barArea.appendChild(gl);
   }
 
-  // Blue bar (7 to 15) with value label at bar end
+  // Blue bar (7 to 15) with value at bar end
   var wA = d.a / maxVal * 100;
   if (wA < 0.5 && d.a > 0) wA = 0.5;
   var trackA = document.createElement('div');
@@ -320,7 +322,7 @@ for (var i = 0; i < data.length; i++) {
   trackA.appendChild(valA);
   barArea.appendChild(trackA);
 
-  // Red bar (16 to 18) with value label at bar end
+  // Red bar (16 to 18) with value at bar end
   var wB = d.b / maxVal * 100;
   if (wB < 0.5 && d.b > 0) wB = 0.5;
   var trackB = document.createElement('div');
