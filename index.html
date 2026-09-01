@@ -55,23 +55,19 @@
   .legend-blue { background: #21418d; }
   .legend-red { background: #dd1f26; }
 
-  .chart-scroll {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
   .chart {
-    min-width: 900px;
+    width: 100%;
   }
 
+  /* === DESKTOP: side-by-side layout === */
   .axis-row {
     display: flex;
     align-items: flex-end;
     height: 30px;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
   .axis-spacer {
-    flex: 0 0 360px;
+    flex: 0 0 38%;
   }
   .axis-scale {
     flex: 1;
@@ -90,7 +86,7 @@
   .bar-row {
     display: flex;
     align-items: center;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
     cursor: pointer;
   }
   .bar-row:hover .bar {
@@ -98,7 +94,7 @@
   }
 
   .bar-label {
-    flex: 0 0 360px;
+    flex: 0 0 38%;
     padding-right: 14px;
     font-size: 16px;
     line-height: 1.35;
@@ -159,6 +155,49 @@
   .tooltip .tt-reason { font-weight: 700; margin-bottom: 4px; }
   .tooltip .tt-row { display: flex; align-items: center; gap: 6px; }
   .tooltip .tt-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+
+  /* === MOBILE: stacked layout, labels above bars === */
+  @media (max-width: 700px) {
+    .headline { font-size: 28px; }
+    .subhead { font-size: 16px; }
+    .legend-item { font-size: 14px; }
+    .source { font-size: 14px; }
+    .graphic-credit { font-size: 14px; }
+
+    .axis-row {
+      height: 26px;
+    }
+    .axis-spacer {
+      flex: 0 0 0;
+    }
+    .axis-tick {
+      font-size: 13px;
+    }
+
+    .bar-row {
+      flex-direction: column;
+      align-items: stretch;
+      margin-bottom: 20px;
+    }
+
+    .bar-label {
+      flex: none;
+      width: 100%;
+      text-align: left;
+      padding-right: 0;
+      margin-bottom: 8px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .bar-area {
+      width: 100%;
+    }
+
+    .bar {
+      height: 24px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -169,9 +208,7 @@
     <div class="legend-item"><span class="legend-swatch legend-blue"></span> 7 to 15 years</div>
     <div class="legend-item"><span class="legend-swatch legend-red"></span> 16 to 18 years</div>
   </div>
-  <div class="chart-scroll">
-    <div class="chart" id="chart"></div>
-  </div>
+  <div class="chart" id="chart"></div>
   <p class="source">
     Source: Stats SA, General Household Survey
     <br><span class="graphic-credit">Graphic: Mihle Mdashe/News24</span>
