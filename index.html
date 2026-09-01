@@ -18,14 +18,14 @@
     margin: 0 auto;
   }
   .headline {
-    font-size: 32px;
+    font-size: 64px;
     font-weight: 700;
     color: #21418d;
-    margin-bottom: 6px;
-    line-height: 1.2;
+    margin-bottom: 8px;
+    line-height: 1.15;
   }
   .subhead {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 400;
     color: #444;
     margin-bottom: 20px;
@@ -42,13 +42,13 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 14px;
+    font-size: 20px;
     font-weight: 600;
     color: #333;
   }
   .legend-swatch {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border-radius: 3px;
     display: inline-block;
   }
@@ -61,6 +61,7 @@
   svg {
     display: block;
     width: 100%;
+    min-width: 700px;
     height: auto;
   }
   .bar-group { cursor: pointer; }
@@ -69,21 +70,21 @@
   }
   .bar-group:hover .bar { opacity: 0.8; }
   .bar-label {
-    font-size: 13px;
+    font-size: 16px;
     fill: #1a1a1a;
     font-weight: 400;
   }
   .axis-line { stroke: #ccc; stroke-width: 1; }
-  .axis-tick { font-size: 12px; fill: #666; }
+  .axis-tick { font-size: 14px; fill: #666; }
   .grid-line { stroke: #eee; stroke-width: 1; }
   .source {
-    font-size: 13px;
+    font-size: 20px;
     color: #666;
     margin-top: 16px;
     line-height: 1.5;
   }
   .graphic-credit {
-    font-size: 13px;
+    font-size: 20px;
     font-weight: 700;
     color: #1a1a1a;
   }
@@ -106,9 +107,13 @@
   .tooltip .tt-row { display: flex; align-items: center; gap: 6px; }
   .tooltip .tt-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
   @media (max-width: 600px) {
-    .headline { font-size: 24px; }
+    .headline { font-size: 28px; }
     .subhead { font-size: 16px; }
-    .bar-label { font-size: 12px; }
+    .legend-item { font-size: 14px; }
+    .source { font-size: 14px; }
+    .graphic-credit { font-size: 14px; }
+    .bar-label { font-size: 15px; }
+    .axis-tick { font-size: 13px; }
   }
 </style>
 </head>
@@ -151,8 +156,10 @@ var data = [
 
 var BLUE = "#21418d", RED = "#dd1f26";
 var maxVal = 25;
-var barH = 18, barGap = 4, groupGap = 14, labelW = 210, axisH = 30;
-var chartW = 620, rowH = (barH * 2 + barGap);
+var barH = 20, barGap = 4, groupGap = 16;
+var labelW = 250, axisH = 34;
+var chartW = 640;
+var rowH = (barH * 2 + barGap);
 var totalH = data.length * (rowH + groupGap) - groupGap + axisH + 10;
 var svgW = labelW + chartW + 10;
 
@@ -161,34 +168,38 @@ var ticks = [0,5,10,15,20,25];
 var svg = '<svg viewBox="0 0 ' + svgW + ' ' + totalH + '" preserveAspectRatio="xMidYMid meet">';
 svg += '<defs><style>.bar{transition:opacity .15s}.grp{cursor:default}.grp:hover .bar{opacity:.75}</style></defs>';
 
-// Grid lines + tick labels
 for (var t = 0; t < ticks.length; t++) {
   var x = labelW + (ticks[t] / maxVal) * chartW;
   svg += '<line class="grid-line" x1="' + x + '" y1="0" x2="' + x + '" y2="' + (totalH - axisH) + '"/>';
-  svg += '<text class="axis-tick" x="' + x + '" y="' + (totalH - axisH + 18) + '" text-anchor="middle">' + ticks[t] + '%</text>';
+  svg += '<text class="axis-tick" x="' + x + '" y="' + (totalH - axisH + 22) + '" text-anchor="middle">' + ticks[t] + '%</text>';
 }
 
-// Axis line
 svg += '<line class="axis-line" x1="' + labelW + '" y1="' + (totalH - axisH) + '" x2="' + (labelW + chartW) + '" y2="' + (totalH - axisH) + '"/>';
 
 for (var i = 0; i < data.length; i++) {
   var d = data[i];
   var y = i * (rowH + groupGap);
 
-  // Label
-  svg += '<text class="bar-label" x="' + (labelW - 10) + '" y="' + (y + barH - 3) + '" text-anchor="end">' + escapeHtml(d.reason) + '</text>';
+  // Wrap long labels into two lines
+  var labelText = escapeHtml(d.reason);
+  var needsWrap = d.reason.length > 28;
+  if (needsWrap) {
+    var parts = wrapText(d.reason, 26);
+    for (var p = 0; p < parts.length; p++) {
+      svg += '<text class="bar-label" x="' + (labelW - 10) + '" y="' + (y + 14 + p * 19) + '" text-anchor="end">' + escapeHtml(parts[p]) + '</text>';
+    }
+  } else {
+    svg += '<text class="bar-label" x="' + (labelW - 10) + '" y="' + (y + barH - 3) + '" text-anchor="end">' + labelText + '</text>';
+  }
 
-  // Group wrapper for hover
   svg += '<g class="grp" data-idx="' + i + '">';
 
-  // Bar A (7-15)
   var wA = (d.a / maxVal) * chartW;
-  if (wA < 0.5) wA = d.a > 0 ? 1 : 0;
+  if (wA < 0.5 && d.a > 0) wA = 1;
   svg += '<rect class="bar" x="' + labelW + '" y="' + y + '" width="' + wA + '" height="' + barH + '" fill="' + BLUE + '" rx="2"/>';
 
-  // Bar B (16-18)
   var wB = (d.b / maxVal) * chartW;
-  if (wB < 0.5) wB = d.b > 0 ? 1 : 0;
+  if (wB < 0.5 && d.b > 0) wB = 1;
   svg += '<rect class="bar" x="' + labelW + '" y="' + (y + barH + barGap) + '" width="' + wB + '" height="' + barH + '" fill="' + RED + '" rx="2"/>';
 
   svg += '</g>';
@@ -221,6 +232,23 @@ for (var g = 0; g < groups.length; g++) {
 
 function escapeHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function wrapText(text, maxChars) {
+  var words = text.split(' ');
+  var lines = [];
+  var current = '';
+  for (var w = 0; w < words.length; w++) {
+    var test = current ? current + ' ' + words[w] : words[w];
+    if (test.length > maxChars && current) {
+      lines.push(current);
+      current = words[w];
+    } else {
+      current = test;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
 }
 </script>
 </body>
