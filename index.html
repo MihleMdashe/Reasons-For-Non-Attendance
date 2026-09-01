@@ -54,29 +54,84 @@
   }
   .legend-blue { background: #21418d; }
   .legend-red { background: #dd1f26; }
-  .chart-container {
+
+  .chart {
     width: 100%;
-    overflow-x: auto;
   }
-  svg {
-    display: block;
-    width: 100%;
-    min-width: 700px;
-    height: auto;
+
+  .axis-row {
+    display: flex;
+    align-items: flex-end;
+    height: 30px;
+    margin-bottom: 4px;
   }
-  .bar-group { cursor: pointer; }
-  .bar {
-    transition: opacity 0.15s ease;
+  .axis-spacer {
+    flex: 0 0 38%;
+    min-width: 180px;
   }
-  .bar-group:hover .bar { opacity: 0.8; }
+  .axis-scale {
+    flex: 1;
+    position: relative;
+    height: 100%;
+  }
+  .axis-tick {
+    position: absolute;
+    bottom: 0;
+    transform: translateX(-50%);
+    font-size: 14px;
+    color: #666;
+    white-space: nowrap;
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 16px;
+    cursor: pointer;
+  }
+  .bar-row:hover .bar {
+    opacity: 0.8;
+  }
+
   .bar-label {
+    flex: 0 0 38%;
+    min-width: 180px;
+    padding-right: 12px;
     font-size: 16px;
-    fill: #1a1a1a;
-    font-weight: 400;
+    line-height: 1.35;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    text-align: right;
+    justify-content: flex-end;
   }
-  .axis-line { stroke: #ccc; stroke-width: 1; }
-  .axis-tick { font-size: 14px; fill: #666; }
-  .grid-line { stroke: #eee; stroke-width: 1; }
+
+  .bar-area {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .bar {
+    height: 20px;
+    border-radius: 2px;
+    transition: opacity 0.15s ease;
+    margin-bottom: 4px;
+  }
+  .bar-blue { background: #21418d; }
+  .bar-red { background: #dd1f26; }
+
+  .grid-lines {
+    position: relative;
+    height: 100%;
+  }
+  .grid-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: #eee;
+  }
+
   .source {
     font-size: 20px;
     color: #666;
@@ -88,6 +143,7 @@
     font-weight: 700;
     color: #1a1a1a;
   }
+
   .tooltip {
     position: fixed;
     pointer-events: none;
@@ -106,13 +162,15 @@
   .tooltip .tt-reason { font-weight: 700; margin-bottom: 4px; }
   .tooltip .tt-row { display: flex; align-items: center; gap: 6px; }
   .tooltip .tt-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+
   @media (max-width: 600px) {
     .headline { font-size: 28px; }
     .subhead { font-size: 16px; }
     .legend-item { font-size: 14px; }
     .source { font-size: 14px; }
     .graphic-credit { font-size: 14px; }
-    .bar-label { font-size: 15px; }
+    .bar-label { font-size: 15px; min-width: 140px; }
+    .bar { height: 18px; }
     .axis-tick { font-size: 13px; }
   }
 </style>
@@ -125,7 +183,7 @@
     <div class="legend-item"><span class="legend-swatch legend-blue"></span> 7 to 15 years</div>
     <div class="legend-item"><span class="legend-swatch legend-red"></span> 16 to 18 years</div>
   </div>
-  <div class="chart-container" id="chart-container"></div>
+  <div class="chart" id="chart"></div>
   <p class="source">
     Source: Stats SA, General Household Survey
     <br><span class="graphic-credit">Graphic: Mihle Mdashe/News24</span>
@@ -147,108 +205,105 @@ var data = [
   {reason:"Family commitment",a:1.4,b:3.7},
   {reason:"Violence in school",a:1.3,b:0.6},
   {reason:"Working at home / business / job",a:1.1,b:3.4},
+  {reason:"Do not have time / too busy",a:0.3,b:0.4},
   {reason:"Pregnancy",a:0,b:3.2},
   {reason:"Failed exams",a:0,b:1.4},
   {reason:"Difficulties getting to school (transport)",a:0,b:1.2},
-  {reason:"Got married",a:0,b:0},
-  {reason:"Do not have time / too busy",a:0.3,b:0.4}
+  {reason:"Got married",a:0,b:0}
 ];
 
-var BLUE = "#21418d", RED = "#dd1f26";
 var maxVal = 25;
-var barH = 20, barGap = 4, groupGap = 16;
-var labelW = 250, axisH = 34;
-var chartW = 640;
-var rowH = (barH * 2 + barGap);
-var totalH = data.length * (rowH + groupGap) - groupGap + axisH + 10;
-var svgW = labelW + chartW + 10;
-
 var ticks = [0,5,10,15,20,25];
 
-var svg = '<svg viewBox="0 0 ' + svgW + ' ' + totalH + '" preserveAspectRatio="xMidYMid meet">';
-svg += '<defs><style>.bar{transition:opacity .15s}.grp{cursor:default}.grp:hover .bar{opacity:.75}</style></defs>';
+var chart = document.getElementById('chart');
 
+// Axis row
+var axisRow = document.createElement('div');
+axisRow.className = 'axis-row';
+var axisSpacer = document.createElement('div');
+axisSpacer.className = 'axis-spacer';
+axisRow.appendChild(axisSpacer);
+var axisScale = document.createElement('div');
+axisScale.className = 'axis-scale';
 for (var t = 0; t < ticks.length; t++) {
-  var x = labelW + (ticks[t] / maxVal) * chartW;
-  svg += '<line class="grid-line" x1="' + x + '" y1="0" x2="' + x + '" y2="' + (totalH - axisH) + '"/>';
-  svg += '<text class="axis-tick" x="' + x + '" y="' + (totalH - axisH + 22) + '" text-anchor="middle">' + ticks[t] + '%</text>';
+  var tick = document.createElement('span');
+  tick.className = 'axis-tick';
+  tick.textContent = ticks[t] + '%';
+  tick.style.left = (ticks[t] / maxVal * 100) + '%';
+  axisScale.appendChild(tick);
 }
+axisRow.appendChild(axisScale);
+chart.appendChild(axisRow);
 
-svg += '<line class="axis-line" x1="' + labelW + '" y1="' + (totalH - axisH) + '" x2="' + (labelW + chartW) + '" y2="' + (totalH - axisH) + '"/>';
-
+// Data rows
 for (var i = 0; i < data.length; i++) {
   var d = data[i];
-  var y = i * (rowH + groupGap);
+  var row = document.createElement('div');
+  row.className = 'bar-row';
+  row.setAttribute('data-idx', i);
 
-  // Wrap long labels into two lines
-  var labelText = escapeHtml(d.reason);
-  var needsWrap = d.reason.length > 28;
-  if (needsWrap) {
-    var parts = wrapText(d.reason, 26);
-    for (var p = 0; p < parts.length; p++) {
-      svg += '<text class="bar-label" x="' + (labelW - 10) + '" y="' + (y + 14 + p * 19) + '" text-anchor="end">' + escapeHtml(parts[p]) + '</text>';
-    }
-  } else {
-    svg += '<text class="bar-label" x="' + (labelW - 10) + '" y="' + (y + barH - 3) + '" text-anchor="end">' + labelText + '</text>';
+  // Label
+  var label = document.createElement('div');
+  label.className = 'bar-label';
+  label.textContent = d.reason;
+  row.appendChild(label);
+
+  // Bar area with grid lines
+  var barArea = document.createElement('div');
+  barArea.className = 'bar-area';
+  barArea.style.position = 'relative';
+
+  // Grid lines
+  for (var g = 0; g < ticks.length; g++) {
+    var gl = document.createElement('div');
+    gl.className = 'grid-line';
+    gl.style.left = (ticks[g] / maxVal * 100) + '%';
+    barArea.appendChild(gl);
   }
 
-  svg += '<g class="grp" data-idx="' + i + '">';
+  // Blue bar (7 to 15)
+  var barA = document.createElement('div');
+  barA.className = 'bar bar-blue';
+  var wA = d.a / maxVal * 100;
+  if (wA < 0.5 && d.a > 0) wA = 0.5;
+  barA.style.width = wA + '%';
+  barArea.appendChild(barA);
 
-  var wA = (d.a / maxVal) * chartW;
-  if (wA < 0.5 && d.a > 0) wA = 1;
-  svg += '<rect class="bar" x="' + labelW + '" y="' + y + '" width="' + wA + '" height="' + barH + '" fill="' + BLUE + '" rx="2"/>';
+  // Red bar (16 to 18)
+  var barB = document.createElement('div');
+  barB.className = 'bar bar-red';
+  var wB = d.b / maxVal * 100;
+  if (wB < 0.5 && d.b > 0) wB = 0.5;
+  barB.style.width = wB + '%';
+  barArea.appendChild(barB);
 
-  var wB = (d.b / maxVal) * chartW;
-  if (wB < 0.5 && d.b > 0) wB = 1;
-  svg += '<rect class="bar" x="' + labelW + '" y="' + (y + barH + barGap) + '" width="' + wB + '" height="' + barH + '" fill="' + RED + '" rx="2"/>';
-
-  svg += '</g>';
+  row.appendChild(barArea);
+  chart.appendChild(row);
 }
-
-svg += '</svg>';
-
-document.getElementById('chart-container').innerHTML = svg;
 
 // Tooltip
 var tt = document.getElementById('tooltip');
-var groups = document.querySelectorAll('.grp');
-for (var g = 0; g < groups.length; g++) {
-  groups[g].addEventListener('mouseenter', function(e) {
+var rows = document.querySelectorAll('.bar-row');
+for (var r = 0; r < rows.length; r++) {
+  rows[r].addEventListener('mouseenter', function(e) {
     var idx = parseInt(this.getAttribute('data-idx'));
     var d = data[idx];
     tt.innerHTML = '<div class="tt-reason">' + escapeHtml(d.reason) + '</div>' +
-      '<div class="tt-row"><span class="tt-dot" style="background:' + BLUE + '"></span> 7 to 15 years: ' + d.a + '%</div>' +
-      '<div class="tt-row"><span class="tt-dot" style="background:' + RED + '"></span> 16 to 18 years: ' + d.b + '%</div>';
+      '<div class="tt-row"><span class="tt-dot" style="background:#21418d"></span> 7 to 15 years: ' + d.a + '%</div>' +
+      '<div class="tt-row"><span class="tt-dot" style="background:#dd1f26"></span> 16 to 18 years: ' + d.b + '%</div>';
     tt.style.opacity = 1;
   });
-  groups[g].addEventListener('mousemove', function(e) {
+  rows[r].addEventListener('mousemove', function(e) {
     tt.style.left = (e.clientX + 16) + 'px';
     tt.style.top = (e.clientY - 10) + 'px';
   });
-  groups[g].addEventListener('mouseleave', function() {
+  rows[r].addEventListener('mouseleave', function() {
     tt.style.opacity = 0;
   });
 }
 
 function escapeHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function wrapText(text, maxChars) {
-  var words = text.split(' ');
-  var lines = [];
-  var current = '';
-  for (var w = 0; w < words.length; w++) {
-    var test = current ? current + ' ' + words[w] : words[w];
-    if (test.length > maxChars && current) {
-      lines.push(current);
-      current = words[w];
-    } else {
-      current = test;
-    }
-  }
-  if (current) lines.push(current);
-  return lines;
 }
 </script>
 </body>
