@@ -107,12 +107,10 @@
     position: relative;
   }
 
-  .bar-wrap {
+  .bar-track {
     position: relative;
-    margin-bottom: 5px;
     height: 22px;
-    display: flex;
-    align-items: center;
+    margin-bottom: 5px;
   }
 
   .bar {
@@ -125,12 +123,13 @@
 
   .bar-value {
     position: absolute;
-    left: 100%;
-    margin-left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
     font-size: 14px;
     font-weight: 600;
     color: #333;
     white-space: nowrap;
+    margin-left: 8px;
   }
   .bar-value-zero {
     color: #aaa;
@@ -214,7 +213,7 @@
       width: 100%;
     }
 
-    .bar, .bar-wrap {
+    .bar, .bar-track {
       height: 24px;
     }
   }
@@ -305,35 +304,37 @@ for (var i = 0; i < data.length; i++) {
     barArea.appendChild(gl);
   }
 
-  // Blue bar (7 to 15) with value label
-  var wrapA = document.createElement('div');
-  wrapA.className = 'bar-wrap';
-  var barA = document.createElement('div');
-  barA.className = 'bar bar-blue';
+  // Blue bar (7 to 15) with value label at bar end
   var wA = d.a / maxVal * 100;
   if (wA < 0.5 && d.a > 0) wA = 0.5;
+  var trackA = document.createElement('div');
+  trackA.className = 'bar-track';
+  var barA = document.createElement('div');
+  barA.className = 'bar bar-blue';
   barA.style.width = wA + '%';
-  wrapA.appendChild(barA);
+  trackA.appendChild(barA);
   var valA = document.createElement('span');
   valA.className = 'bar-value' + (d.a === 0 ? ' bar-value-zero' : '');
   valA.textContent = d.a + '%';
-  wrapA.appendChild(valA);
-  barArea.appendChild(wrapA);
+  valA.style.left = wA + '%';
+  trackA.appendChild(valA);
+  barArea.appendChild(trackA);
 
-  // Red bar (16 to 18) with value label
-  var wrapB = document.createElement('div');
-  wrapB.className = 'bar-wrap';
-  var barB = document.createElement('div');
-  barB.className = 'bar bar-red';
+  // Red bar (16 to 18) with value label at bar end
   var wB = d.b / maxVal * 100;
   if (wB < 0.5 && d.b > 0) wB = 0.5;
+  var trackB = document.createElement('div');
+  trackB.className = 'bar-track';
+  var barB = document.createElement('div');
+  barB.className = 'bar bar-red';
   barB.style.width = wB + '%';
-  wrapB.appendChild(barB);
+  trackB.appendChild(barB);
   var valB = document.createElement('span');
   valB.className = 'bar-value' + (d.b === 0 ? ' bar-value-zero' : '');
   valB.textContent = d.b + '%';
-  wrapB.appendChild(valB);
-  barArea.appendChild(wrapB);
+  valB.style.left = wB + '%';
+  trackB.appendChild(valB);
+  barArea.appendChild(trackB);
 
   row.appendChild(barArea);
   chart.appendChild(row);
