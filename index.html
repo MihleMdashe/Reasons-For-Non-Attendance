@@ -59,7 +59,6 @@
     width: 100%;
   }
 
-  /* === DESKTOP: side-by-side layout === */
   .axis-row {
     display: flex;
     align-items: flex-end;
@@ -108,14 +107,35 @@
     position: relative;
   }
 
+  .bar-wrap {
+    position: relative;
+    margin-bottom: 5px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+  }
+
   .bar {
     height: 22px;
     border-radius: 2px;
     transition: opacity 0.15s ease;
-    margin-bottom: 5px;
   }
   .bar-blue { background: #21418d; }
   .bar-red { background: #dd1f26; }
+
+  .bar-value {
+    position: absolute;
+    left: 100%;
+    margin-left: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+  }
+  .bar-value-zero {
+    color: #aaa;
+    font-weight: 400;
+  }
 
   .grid-line {
     position: absolute;
@@ -156,7 +176,7 @@
   .tooltip .tt-row { display: flex; align-items: center; gap: 6px; }
   .tooltip .tt-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
 
-  /* === MOBILE: stacked layout, labels above bars === */
+  /* === MOBILE: stacked layout === */
   @media (max-width: 700px) {
     .headline { font-size: 28px; }
     .subhead { font-size: 16px; }
@@ -194,7 +214,7 @@
       width: 100%;
     }
 
-    .bar {
+    .bar, .bar-wrap {
       height: 24px;
     }
   }
@@ -203,7 +223,7 @@
 <body>
 <div class="graphic-wrap">
   <h1 class="headline">Reasons for not attending school</h1>
-  <p class="subhead">Percentage of out-of-school children by reason and age group</p>
+  <p class="subhead">Percentage of out-of-school pupils by reason and age group</p>
   <div class="legend">
     <div class="legend-item"><span class="legend-swatch legend-blue"></span> 7 to 15 years</div>
     <div class="legend-item"><span class="legend-swatch legend-red"></span> 16 to 18 years</div>
@@ -285,21 +305,35 @@ for (var i = 0; i < data.length; i++) {
     barArea.appendChild(gl);
   }
 
-  // Blue bar (7 to 15)
+  // Blue bar (7 to 15) with value label
+  var wrapA = document.createElement('div');
+  wrapA.className = 'bar-wrap';
   var barA = document.createElement('div');
   barA.className = 'bar bar-blue';
   var wA = d.a / maxVal * 100;
   if (wA < 0.5 && d.a > 0) wA = 0.5;
   barA.style.width = wA + '%';
-  barArea.appendChild(barA);
+  wrapA.appendChild(barA);
+  var valA = document.createElement('span');
+  valA.className = 'bar-value' + (d.a === 0 ? ' bar-value-zero' : '');
+  valA.textContent = d.a + '%';
+  wrapA.appendChild(valA);
+  barArea.appendChild(wrapA);
 
-  // Red bar (16 to 18)
+  // Red bar (16 to 18) with value label
+  var wrapB = document.createElement('div');
+  wrapB.className = 'bar-wrap';
   var barB = document.createElement('div');
   barB.className = 'bar bar-red';
   var wB = d.b / maxVal * 100;
   if (wB < 0.5 && d.b > 0) wB = 0.5;
   barB.style.width = wB + '%';
-  barArea.appendChild(barB);
+  wrapB.appendChild(barB);
+  var valB = document.createElement('span');
+  valB.className = 'bar-value' + (d.b === 0 ? ' bar-value-zero' : '');
+  valB.textContent = d.b + '%';
+  wrapB.appendChild(valB);
+  barArea.appendChild(wrapB);
 
   row.appendChild(barArea);
   chart.appendChild(row);
